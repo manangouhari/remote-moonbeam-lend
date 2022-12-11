@@ -9,12 +9,29 @@ import {IAxelarGasService} from "@axelar-network/axelar-gmp-sdk-solidity/contrac
 import {IERC20} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IERC20.sol";
 
 contract SourceLender is AxelarExecutable {
+    struct Config {
+        string destinationChain;
+        string destinationAddress;
+        string tokenSymbol;
+        string thisChain;
+    }
+
+    Config public config;
     IAxelarGasService public immutable gasReceiver;
 
     constructor(
         address _gateway,
-        address _receiver
+        address _receiver,
+        string memory _thisChain,
+        string memory _destinationChain,
+        string memory _destinationAddress,
+        string memory _lendingTokenSymbol
     ) AxelarExecutable(_gateway) {
         gasReceiver = IAxelarGasService(_receiver);
+
+        config.thisChain = _thisChain;
+        config.destinationChain = _destinationChain;
+        config.destinationAddress = _destinationAddress;
+        config.tokenSymbol = _lendingTokenSymbol;
     }
 }

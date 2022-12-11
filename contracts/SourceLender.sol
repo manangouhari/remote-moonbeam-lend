@@ -12,8 +12,6 @@ error GasNotProvided();
 
 contract SourceLender is AxelarExecutable {
     struct Config {
-        string destinationChain;
-        string destinationAddress;
         string tokenSymbol;
         string thisChain;
     }
@@ -25,19 +23,19 @@ contract SourceLender is AxelarExecutable {
         address _gateway,
         address _receiver,
         string memory _thisChain,
-        string memory _destinationChain,
-        string memory _destinationAddress,
         string memory _lendingTokenSymbol
     ) AxelarExecutable(_gateway) {
         gasReceiver = IAxelarGasService(_receiver);
 
         config.thisChain = _thisChain;
-        config.destinationChain = _destinationChain;
-        config.destinationAddress = _destinationAddress;
         config.tokenSymbol = _lendingTokenSymbol;
     }
 
-    function openPosition(uint256 toLend) external payable {
+    function openPosition(
+        string memory destinationChain,
+        string memory destinationAddress,
+        uint256 toLend
+    ) external payable {
         address tokenAddress = gateway.tokenAddresses(config.tokenSymbol);
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), toLend);
         IERC20(tokenAddress).approve(address(gateway), toLend);
@@ -48,8 +46,8 @@ contract SourceLender is AxelarExecutable {
         // Paying gas for the contract call to happen on the Remote chain.
         gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
             address(this),
-            config.destinationChain,
-            config.destinationAddress,
+            destinationChain,
+            destinationAddress,
             payload,
             config.tokenSymbol,
             toLend,
@@ -58,8 +56,8 @@ contract SourceLender is AxelarExecutable {
 
         // Calling the Axelar Gateway to call the contract on the Remote chain.
         gateway.callContractWithToken(
-            config.destinationChain,
-            config.destinationAddress,
+            destinationChain,
+            destinationAddress,
             payload,
             config.tokenSymbol,
             toLend

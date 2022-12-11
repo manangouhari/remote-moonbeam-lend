@@ -8,6 +8,8 @@ import {IAxelarGasService} from "@axelar-network/axelar-gmp-sdk-solidity/contrac
 
 import {IERC20} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IERC20.sol";
 
+error GasNotProvided();
+
 contract SourceLender is AxelarExecutable {
     struct Config {
         string destinationChain;
@@ -33,5 +35,34 @@ contract SourceLender is AxelarExecutable {
         config.destinationChain = _destinationChain;
         config.destinationAddress = _destinationAddress;
         config.tokenSymbol = _lendingTokenSymbol;
+    }
+
+    function openPosition(uint256 toLend) external payable {
+        address tokenAddress = gateway.tokenAddresses(config.tokenSymbol);
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), toLend);
+        IERC20(tokenAddress).approve(address(gateway), toLend);
+
+        bytes memory payload = abi.encode(msg.sender);
+
+        if (msg.value == 0) revert GasNotProvided();
+        // Paying gas for the contract call to happen on the Remote chain.
+        gasReceiver.payNativeGasForContractCallWithToken{value: msg.value}(
+            address(this),
+            config.destinationChain,
+            config.destinationAddress,
+            payload,
+            config.tokenSymbol,
+            toLend,
+            msg.sender
+        );
+
+        // Calling the Axelar Gateway to call the contract on the Remote chain.
+        gateway.callContractWithToken(
+            config.destinationChain,
+            config.destinationAddress,
+            payload,
+            config.tokenSymbol,
+            toLend
+        );
     }
 }

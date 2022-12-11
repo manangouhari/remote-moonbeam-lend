@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "compile": "npx hardhat compile",
-    "fork": "npx hardhat run ./scripts/createFork.ts"
+    "fork": "npx hardhat run ./scripts/createFork.ts",
+    "test": "npx hardhat run ./scripts/tests/lending.test.ts"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",

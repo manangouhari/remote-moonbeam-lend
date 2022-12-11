@@ -25,3 +25,5 @@ if (require.main === module) {
 
   createFork(toFund);
 }
+
+export {};
